@@ -70,6 +70,9 @@ brew install python3 gcc node
 
 #### Option B: Docker Mode (more secure)
 
+📖 **[Read the Full Docker Setup Guide →](DOCKER_GUIDE.md)**
+
+Quick links:
 | Platform | How to Install |
 |----------|----------------|
 | Windows | [Docker Desktop for Windows](https://docs.docker.com/desktop/install/windows-install/) |
