@@ -6,6 +6,19 @@ A simple online judge system where you can solve programming problems and get yo
 
 ---
 
+## 📸 Screenshots
+
+### Problem List
+![Problem list showing all available challenges](docs/screenshots/homepage.png)
+
+### Code Editor
+![Problem details with Monaco code editor](docs/screenshots/problem_editor.png)
+
+### Submission Result
+![Successful submission with ACCEPTED verdict](docs/screenshots/submission_accepted.png)
+
+---
+
 ## 📖 What is an Online Judge?
 
 An **online judge** is a system that:
