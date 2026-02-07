@@ -19,6 +19,14 @@ A simple online judge system where you can solve programming problems and get yo
 
 ---
 
+## 📱 Mobile & Desktop Apps
+
+Looking for the Android or Desktop version? We have a **Kotlin Multiplatform (KMP)** app that connects to this backend!
+
+👉 **[Go to CodeJudge KMP Repo](https://github.com/jamilxt/online-judge-kmp)**
+
+---
+
 ## 📖 What is an Online Judge?
 
 An **online judge** is a system that:
