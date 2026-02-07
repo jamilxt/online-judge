@@ -120,13 +120,13 @@ The Online Judge uses these Docker images for different programming languages. L
 docker pull python:3.9-slim
 
 # Java
-docker pull openjdk:17-slim
+docker pull eclipse-temurin:17-jdk-alpine
 
 # C/C++
-docker pull gcc:latest
+docker pull gcc:13
 
 # JavaScript
-docker pull node:18-slim
+docker pull node:18-alpine
 ```
 
 **Tip:** This downloads about 1.5 GB total. You only need to do this once!

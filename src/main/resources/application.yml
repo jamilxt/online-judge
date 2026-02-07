@@ -31,14 +31,14 @@ spring:
 # - local: Runs code directly on your machine (faster, requires compilers installed)
 # - docker: Runs code in isolated containers (more secure, requires Docker)
 executor:
-  mode: local
+  mode: docker
 
 # Docker images used when executor.mode=docker
 # These will be pulled automatically if not present
 docker:
   images:
     python: python:3.9-slim
-    java: openjdk:17-slim
-    cpp: gcc:latest
-    javascript: node:18-slim
-    c: gcc:latest
+    java: eclipse-temurin:17-jdk-alpine
+    cpp: gcc:13
+    javascript: node:18-alpine
+    c: gcc:13

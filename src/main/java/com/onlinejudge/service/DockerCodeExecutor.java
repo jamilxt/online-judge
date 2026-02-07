@@ -36,10 +36,10 @@ public class DockerCodeExecutor implements CodeExecutor {
     // Language configuration for Docker execution
     private static final Map<Integer, DockerLanguageConfig> LANGUAGES = Map.of(
             71, new DockerLanguageConfig("python", "py", "python:3.9-slim", null, "python3 /code/solution.py"),
-            62, new DockerLanguageConfig("java", "java", "openjdk:17-slim", "javac /code/Main.java", "java -cp /code Main"),
-            54, new DockerLanguageConfig("cpp", "cpp", "gcc:latest", "g++ -o /code/a.out /code/solution.cpp", "/code/a.out"),
-            63, new DockerLanguageConfig("javascript", "js", "node:18-slim", null, "node /code/solution.js"),
-            50, new DockerLanguageConfig("c", "c", "gcc:latest", "gcc -o /code/a.out /code/solution.c", "/code/a.out")
+            62, new DockerLanguageConfig("java", "java", "eclipse-temurin:17-jdk-alpine", "javac /code/Main.java", "java -cp /code Main"),
+            54, new DockerLanguageConfig("cpp", "cpp", "gcc:13", "g++ -o /code/a.out /code/solution.cpp", "/code/a.out"),
+            63, new DockerLanguageConfig("javascript", "js", "node:18-alpine", null, "node /code/solution.js"),
+            50, new DockerLanguageConfig("c", "c", "gcc:13", "gcc -o /code/a.out /code/solution.c", "/code/a.out")
     );
 
     @Override
