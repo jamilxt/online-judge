@@ -2,7 +2,7 @@
 
 A simple online judge system where you can solve programming problems and get your code automatically evaluated. Think of it like LeetCode or HackerRank, but running on your own computer!
 
-![CodeJudge Homepage](src/main/resources/static/screenshot-placeholder.png)
+**Works on Windows, Linux, and macOS!** 🖥️ 🐧 🍎
 
 ---
 
@@ -28,42 +28,74 @@ An **online judge** is a system that:
 
 ## 🛠️ Requirements
 
-Before you start, make sure you have these installed:
-
-### Must Have:
+### Must Have (All Platforms):
 | Software | Why You Need It | How to Check |
 |----------|-----------------|--------------|
 | **Java 17+** | Runs the server | `java -version` |
 | **Maven** | Builds the project | `mvn -version` |
 
-### For Running Code (at least one):
+### For Running Code - Choose One Mode:
 
-**Option A: Local Mode (easier to set up)**
-| Language | Command to Install (Ubuntu/Debian) |
-|----------|-----------------------------------|
-| Python 3 | `sudo apt install python3` |
-| Java | Already installed with Java 17 |
-| C/C++ | `sudo apt install gcc g++` |
-| Node.js | `sudo apt install nodejs` |
+#### Option A: Local Mode (easier to set up)
 
-**Option B: Docker Mode (more secure)**
-| Software | How to Install |
+<details>
+<summary><b>🪟 Windows</b></summary>
+
+| Language | How to Install |
 |----------|----------------|
-| Docker | [Install Docker](https://docs.docker.com/get-docker/) |
+| Python | [Download Python](https://www.python.org/downloads/) - check "Add to PATH" |
+| Java | Already included with Java 17 |
+| C/C++ | [Download MinGW](https://www.mingw-w64.org/downloads/) or use Visual Studio |
+| Node.js | [Download Node.js](https://nodejs.org/) |
+
+</details>
+
+<details>
+<summary><b>🐧 Linux (Ubuntu/Debian)</b></summary>
+
+```bash
+sudo apt install python3 gcc g++ nodejs
+```
+
+</details>
+
+<details>
+<summary><b>🍎 macOS</b></summary>
+
+```bash
+brew install python3 gcc node
+```
+
+</details>
+
+#### Option B: Docker Mode (more secure)
+
+| Platform | How to Install |
+|----------|----------------|
+| Windows | [Docker Desktop for Windows](https://docs.docker.com/desktop/install/windows-install/) |
+| Linux | [Docker for Linux](https://docs.docker.com/engine/install/) |
+| macOS | [Docker Desktop for Mac](https://docs.docker.com/desktop/install/mac-install/) |
 
 ---
 
 ## 🚀 Quick Start (5 minutes)
 
-### Step 1: Open Terminal
+### Step 1: Open Terminal/Command Prompt
 Navigate to the project folder:
 ```bash
-cd /path/to/online-judge
+cd path/to/online-judge
 ```
 
 ### Step 2: Run the Application
-```bash
+
+**On Windows (Command Prompt or PowerShell):**
+```cmd
 mvn spring-boot:run
+```
+
+**On Linux/macOS:**
+```bash
+./mvnw spring-boot:run
 ```
 
 Wait until you see:
@@ -153,13 +185,15 @@ The app comes with 5 practice problems:
 
 ## 💻 Supported Languages
 
-| Language | Version | File Naming |
-|----------|---------|-------------|
-| Python | 3.x | `solution.py` |
-| Java | 17 | `Main.java` (class must be named `Main`) |
-| C++ | GCC | `solution.cpp` |
-| JavaScript | Node.js | `solution.js` |
-| C | GCC | `solution.c` |
+| Language | Windows Command | Linux/Mac Command |
+|----------|-----------------|-------------------|
+| Python | `python` | `python3` |
+| Java | `javac` & `java` | `javac` & `java` |
+| C++ | `g++` | `g++` |
+| JavaScript | `node` | `node` |
+| C | `gcc` | `gcc` |
+
+**Note:** The app automatically detects your OS and uses the correct commands!
 
 ---
 
@@ -180,32 +214,57 @@ The app comes with 5 practice problems:
 
 ## ❓ Troubleshooting
 
-### "Port 8081 already in use"
+### Windows Issues
+
+**"'python' is not recognized"**
+- Install Python from [python.org](https://www.python.org/downloads/)
+- Make sure to check **"Add Python to PATH"** during installation
+- Restart your terminal after installation
+
+**"'g++' is not recognized"**
+- Install MinGW-w64 from [mingw-w64.org](https://www.mingw-w64.org/downloads/)
+- Add `C:\mingw64\bin` to your PATH environment variable
+
+### Linux/Mac Issues
+
+**"Port 8081 already in use"**
 ```bash
 # Kill the process using port 8081
-fuser -k 8081/tcp
+fuser -k 8081/tcp   # Linux
+lsof -ti:8081 | xargs kill  # macOS
 
 # Then try again
 mvn spring-boot:run
 ```
 
-### "python3: command not found"
+**"python3: command not found"**
 ```bash
-# Install Python
+# Ubuntu/Debian
 sudo apt install python3
+
+# macOS
+brew install python3
 ```
 
-### "Docker: permission denied"
+### Docker Issues
+
+**"Docker: permission denied" (Linux)**
 ```bash
-# Add yourself to docker group
 sudo usermod -aG docker $USER
 # Then log out and log back in
 ```
 
-### "Compilation Error" when submitting Java
+**Docker not starting (Windows)**
+- Make sure Docker Desktop is running
+- Check that WSL2 is properly installed
+
+### Java Issues
+
+**"Compilation Error" when submitting Java**
+
 Make sure your class is named `Main`:
 ```java
-public class Main {  // ✅ Correct
+public class Main {  // ✅ Must be named Main
     public static void main(String[] args) {
         // your code
     }

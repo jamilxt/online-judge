@@ -6,6 +6,8 @@ import org.springframework.stereotype.Service;
 
 import java.io.*;
 import java.nio.file.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.*;
@@ -13,6 +15,7 @@ import java.util.concurrent.*;
 /**
  * Docker-based code executor that runs code in isolated containers.
  * Provides better security than local execution.
+ * Works on Windows, Linux, and macOS.
  * 
  * Enabled when: executor.mode=docker
  * 
@@ -27,7 +30,8 @@ import java.util.concurrent.*;
 @ConditionalOnProperty(name = "executor.mode", havingValue = "docker")
 public class DockerCodeExecutor implements CodeExecutor {
 
-    private static final String TEMP_DIR = System.getProperty("java.io.tmpdir") + "/onlinejudge-docker";
+    private static final String TEMP_DIR = System.getProperty("java.io.tmpdir") + File.separator + "onlinejudge-docker";
+    private static final boolean IS_WINDOWS = System.getProperty("os.name").toLowerCase().contains("win");
 
     // Language configuration for Docker execution
     private static final Map<Integer, DockerLanguageConfig> LANGUAGES = Map.of(
@@ -134,45 +138,49 @@ public class DockerCodeExecutor implements CodeExecutor {
             // Calculate memory limit in MB (minimum 32MB)
             int memoryMb = Math.max(32, memoryLimitKb / 1024);
             
-            // Build docker command
-            // --rm: Remove container after execution
-            // --network none: No network access
-            // --memory: Memory limit
-            // --cpus: CPU limit
-            // -v: Mount code directory
-            ProcessBuilder pb;
-            
-            if (stdinFile != null && Files.exists(stdinFile)) {
-                // With stdin
-                pb = new ProcessBuilder(
-                        "bash", "-c",
-                        String.format(
-                                "cat %s | docker run --rm --network none --memory=%dm --cpus=0.5 " +
-                                "-v %s:/code:rw -i %s sh -c '%s'",
-                                stdinFile.toString(),
-                                memoryMb,
-                                workDir.toAbsolutePath(),
-                                image,
-                                command
-                        )
-                );
-            } else {
-                // Without stdin
-                pb = new ProcessBuilder(
-                        "docker", "run", "--rm", "--network", "none",
-                        "--memory=" + memoryMb + "m",
-                        "--cpus=0.5",
-                        "-v", workDir.toAbsolutePath() + ":/code:rw",
-                        image,
-                        "sh", "-c", command
-                );
+            // Get absolute path in Docker-compatible format
+            String volumePath = workDir.toAbsolutePath().toString();
+            if (IS_WINDOWS) {
+                // Convert Windows path (C:\path) to Docker path (/c/path)
+                volumePath = convertWindowsPathForDocker(volumePath);
             }
             
+            // Build docker command arguments
+            List<String> dockerArgs = new ArrayList<>();
+            dockerArgs.add("docker");
+            dockerArgs.add("run");
+            dockerArgs.add("--rm");
+            dockerArgs.add("--network");
+            dockerArgs.add("none");
+            dockerArgs.add("--memory=" + memoryMb + "m");
+            dockerArgs.add("--cpus=0.5");
+            dockerArgs.add("-v");
+            dockerArgs.add(volumePath + ":/code:rw");
+            
+            // If we have stdin, pipe it in
+            if (stdinFile != null && Files.exists(stdinFile)) {
+                dockerArgs.add("-i");
+            }
+            
+            dockerArgs.add(image);
+            dockerArgs.add("sh");
+            dockerArgs.add("-c");
+            dockerArgs.add(command);
+            
+            ProcessBuilder pb = new ProcessBuilder(dockerArgs);
             pb.redirectErrorStream(false);
+            
             Process process = pb.start();
             
-            // Close stdin immediately if not providing input via file
-            process.getOutputStream().close();
+            // Pipe stdin if provided
+            if (stdinFile != null && Files.exists(stdinFile)) {
+                try (OutputStream os = process.getOutputStream()) {
+                    Files.copy(stdinFile, os);
+                    os.flush();
+                }
+            } else {
+                process.getOutputStream().close();
+            }
             
             // Read stdout and stderr with timeout
             ExecutorService executor = Executors.newFixedThreadPool(2);
@@ -184,8 +192,6 @@ public class DockerCodeExecutor implements CodeExecutor {
             if (!completed) {
                 process.destroyForcibly();
                 executor.shutdownNow();
-                // Also try to stop any running container
-                stopContainer(workDir.getFileName().toString());
                 return ExecutionResult.timeLimitExceeded();
             }
             
@@ -216,12 +222,21 @@ public class DockerCodeExecutor implements CodeExecutor {
         }
     }
 
-    private void stopContainer(String containerId) {
-        try {
-            new ProcessBuilder("docker", "stop", "-t", "1", containerId).start();
-        } catch (Exception e) {
-            // Ignore - container might already be stopped
+    /**
+     * Convert Windows path (C:\Users\...) to Docker-compatible path (/c/Users/...)
+     * This is needed for Docker on Windows with Git Bash or WSL.
+     */
+    private String convertWindowsPathForDocker(String windowsPath) {
+        // Replace backslashes with forward slashes
+        String path = windowsPath.replace("\\", "/");
+        
+        // Convert drive letter (C:) to lowercase mount (/c)
+        if (path.length() >= 2 && path.charAt(1) == ':') {
+            char driveLetter = Character.toLowerCase(path.charAt(0));
+            path = "/" + driveLetter + path.substring(2);
         }
+        
+        return path;
     }
 
     private String readStream(InputStream is) throws IOException {
