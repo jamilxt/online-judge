@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Problem - Online Judge</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <a href="/" class="logo">
+                <div class="logo-icon">⚡</div>
+                <span class="logo-text">CodeJudge</span>
+            </a>
+            <nav class="nav-links">
+                <a href="/" class="nav-link">Problems</a>
+                <a href="#" class="nav-link">Submissions</a>
+                <a href="#" class="nav-link">Leaderboard</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Problem Page Layout -->
+    <div class="problem-page">
+        <!-- Problem Description Panel -->
+        <div class="problem-panel">
+            <div class="panel-header">
+                <h2 id="problem-title">Loading...</h2>
+                <span class="difficulty-badge" id="difficulty-badge">-</span>
+            </div>
+            <div class="panel-content">
+                <a href="/" class="back-btn">← Back to Problems</a>
+                
+                <div class="problem-description" id="problem-description">
+                    <div class="skeleton" style="height: 200px; margin-bottom: 1rem;"></div>
+                    <div class="skeleton" style="height: 100px;"></div>
+                </div>
+
+                <!-- Sample Test Cases -->
+                <div id="sample-testcases"></div>
+            </div>
+        </div>
+
+        <!-- Code Editor Panel -->
+        <div class="problem-panel editor-panel">
+            <div class="editor-toolbar">
+                <select class="language-select" id="language-select">
+                    <option value="71">Python 3</option>
+                    <option value="62">Java</option>
+                    <option value="54">C++ (GCC)</option>
+                    <option value="63">JavaScript (Node.js)</option>
+                    <option value="50">C (GCC)</option>
+                </select>
+                <button class="submit-btn" id="submit-btn" onclick="submitCode()">
+                    <span>▶</span> Submit
+                </button>
+            </div>
+            
+            <div class="editor-container" id="editor-container"></div>
+
+            <!-- Results Panel (hidden by default) -->
+            <div class="results-panel" id="results-panel" style="display: none;">
+                <div class="results-header">
+                    <span class="verdict-badge" id="verdict-badge">-</span>
+                    <span class="results-stats" id="results-stats"></span>
+                </div>
+                <div class="results-content" id="results-content"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Monaco Editor CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs/loader.min.js"></script>
+    
+    <script>
+        const API_BASE = '';
+        let editor = null;
+        let currentProblem = null;
+
+        // Language templates
+        const templates = {
+            71: `# Python Solution
+a, b = map(int, input().split())
+print(a + b)
+`,
+            62: `// Java Solution
+import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int a = sc.nextInt();
+        int b = sc.nextInt();
+        System.out.println(a + b);
+    }
+}
+`,
+            54: `// C++ Solution
+#include <iostream>
+using namespace std;
+
+int main() {
+    int a, b;
+    cin >> a >> b;
+    cout << a + b << endl;
+    return 0;
+}
+`,
+            63: `// JavaScript Solution
+const readline = require('readline');
+const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout
+});
+
+rl.on('line', (line) => {
+    const [a, b] = line.split(' ').map(Number);
+    console.log(a + b);
+    rl.close();
+});
+`,
+            50: `// C Solution
+#include <stdio.h>
+
+int main() {
+    int a, b;
+    scanf("%d %d", &a, &b);
+    printf("%d\\n", a + b);
+    return 0;
+}
+`
+        };
+
+        const languageMap = {
+            71: 'python',
+            62: 'java',
+            54: 'cpp',
+            63: 'javascript',
+            50: 'c'
+        };
+
+        // Initialize Monaco Editor
+        require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs' }});
+        
+        require(['vs/editor/editor.main'], function() {
+            // Define dark theme
+            monaco.editor.defineTheme('onlinejudge-dark', {
+                base: 'vs-dark',
+                inherit: true,
+                rules: [
+                    { token: 'comment', foreground: '6A9955' },
+                    { token: 'keyword', foreground: '569CD6' },
+                    { token: 'string', foreground: 'CE9178' },
+                    { token: 'number', foreground: 'B5CEA8' },
+                    { token: 'type', foreground: '4EC9B0' }
+                ],
+                colors: {
+                    'editor.background': '#0d1117',
+                    'editor.foreground': '#e8e8e8',
+                    'editorLineNumber.foreground': '#6c6c6c',
+                    'editorCursor.foreground': '#00d9ff',
+                    'editor.selectionBackground': '#264f78',
+                    'editor.lineHighlightBackground': '#1a1a2e50'
+                }
+            });
+
+            editor = monaco.editor.create(document.getElementById('editor-container'), {
+                value: templates[71],
+                language: 'python',
+                theme: 'onlinejudge-dark',
+                fontSize: 14,
+                fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
+                minimap: { enabled: false },
+                scrollBeyondLastLine: false,
+                automaticLayout: true,
+                padding: { top: 16, bottom: 16 },
+                lineNumbers: 'on',
+                renderLineHighlight: 'all',
+                cursorBlinking: 'smooth',
+                smoothScrolling: true
+            });
+
+            // Language change handler
+            document.getElementById('language-select').addEventListener('change', function() {
+                const langId = parseInt(this.value);
+                const monacoLang = languageMap[langId] || 'plaintext';
+                monaco.editor.setModelLanguage(editor.getModel(), monacoLang);
+                editor.setValue(templates[langId] || '// Write your code here');
+            });
+        });
+
+        // Load problem details
+        async function loadProblem() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const problemId = urlParams.get('id');
+            
+            if (!problemId) {
+                window.location.href = '/';
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/api/problems/${problemId}`);
+                if (!response.ok) throw new Error('Problem not found');
+                
+                currentProblem = await response.json();
+                renderProblem(currentProblem);
+                document.title = `${currentProblem.title} - Online Judge`;
+            } catch (error) {
+                console.error('Failed to load problem:', error);
+                document.getElementById('problem-description').innerHTML = `
+                    <div class="empty-state">
+                        <h3>Problem not found</h3>
+                        <p><a href="/">Back to problems</a></p>
+                    </div>
+                `;
+            }
+        }
+
+        function renderProblem(problem) {
+            document.getElementById('problem-title').textContent = problem.title;
+            
+            const badge = document.getElementById('difficulty-badge');
+            badge.textContent = problem.difficulty;
+            badge.className = `difficulty-badge ${problem.difficulty.toLowerCase()}`;
+
+            // Render description as markdown-like format
+            document.getElementById('problem-description').innerHTML = 
+                renderMarkdown(problem.description);
+
+            // Render sample test cases
+            if (problem.sampleTestCases && problem.sampleTestCases.length > 0) {
+                const tcHtml = problem.sampleTestCases.map((tc, i) => `
+                    <div class="sample-testcase">
+                        <div class="testcase-header">Sample Test Case ${i + 1}</div>
+                        <div class="testcase-content">
+                            <div class="testcase-section">
+                                <h4>Input</h4>
+                                <pre>${escapeHtml(tc.input)}</pre>
+                            </div>
+                            <div class="testcase-section">
+                                <h4>Expected Output</h4>
+                                <pre>${escapeHtml(tc.expectedOutput)}</pre>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+                document.getElementById('sample-testcases').innerHTML = tcHtml;
+            }
+        }
+
+        function renderMarkdown(text) {
+            // Simple markdown rendering
+            return text
+                .replace(/## (.*)/g, '<h2>$1</h2>')
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/`([^`]+)`/g, '<code>$1</code>')
+                .replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>')
+                .replace(/\n/g, '<br>');
+        }
+
+        async function submitCode() {
+            if (!currentProblem || !editor) return;
+
+            const btn = document.getElementById('submit-btn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner"></span> Judging...';
+
+            const resultsPanel = document.getElementById('results-panel');
+            resultsPanel.style.display = 'block';
+            document.getElementById('verdict-badge').textContent = 'JUDGING';
+            document.getElementById('verdict-badge').className = 'verdict-badge pending';
+            document.getElementById('results-stats').textContent = 'Running test cases...';
+            document.getElementById('results-content').innerHTML = 
+                '<div class="skeleton" style="height: 60px; margin-bottom: 0.5rem;"></div>'.repeat(3);
+
+            try {
+                const response = await fetch(`${API_BASE}/api/submissions`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        problemId: currentProblem.id,
+                        languageId: parseInt(document.getElementById('language-select').value),
+                        sourceCode: editor.getValue()
+                    })
+                });
+
+                const result = await response.json();
+                renderResult(result);
+            } catch (error) {
+                console.error('Submission failed:', error);
+                document.getElementById('verdict-badge').textContent = 'ERROR';
+                document.getElementById('verdict-badge').className = 'verdict-badge compilation-error';
+                document.getElementById('results-stats').textContent = '';
+                document.getElementById('results-content').innerHTML = `
+                    <div class="error-output">Failed to submit: ${error.message}</div>
+                `;
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<span>▶</span> Submit';
+            }
+        }
+
+        function renderResult(result) {
+            const verdictBadge = document.getElementById('verdict-badge');
+            const verdictClass = getVerdictClass(result.verdict);
+            verdictBadge.textContent = formatVerdict(result.verdict);
+            verdictBadge.className = `verdict-badge ${verdictClass}`;
+
+            // Stats
+            const stats = [];
+            if (result.executionTime) stats.push(`Time: ${result.executionTime.toFixed(3)}s`);
+            if (result.memoryUsed) stats.push(`Memory: ${(result.memoryUsed / 1024).toFixed(2)} MB`);
+            document.getElementById('results-stats').textContent = stats.join(' • ');
+
+            // Content
+            const content = document.getElementById('results-content');
+            
+            if (result.compileOutput) {
+                content.innerHTML = `
+                    <h4 style="color: var(--compilation-error); margin-bottom: 0.5rem;">Compilation Error</h4>
+                    <div class="error-output">${escapeHtml(result.compileOutput)}</div>
+                `;
+                return;
+            }
+
+            if (result.errorMessage) {
+                content.innerHTML = `
+                    <h4 style="color: var(--runtime-error); margin-bottom: 0.5rem;">Error</h4>
+                    <div class="error-output">${escapeHtml(result.errorMessage)}</div>
+                `;
+                return;
+            }
+
+            if (result.testCaseResults && result.testCaseResults.length > 0) {
+                content.innerHTML = `
+                    <div class="testcase-results">
+                        ${result.testCaseResults.map(tc => `
+                            <div class="tc-result ${tc.passed ? 'passed' : 'failed'}">
+                                <div class="tc-status ${tc.passed ? 'passed' : 'failed'}">
+                                    ${tc.passed ? '✓' : '✗'}
+                                </div>
+                                <div class="tc-info">
+                                    <strong>Test Case ${tc.testCaseNumber}</strong>
+                                    ${tc.hidden ? ' (Hidden)' : ''}
+                                    <div class="tc-meta">
+                                        ${tc.executionTime ? `Time: ${tc.executionTime.toFixed(3)}s` : ''}
+                                        ${tc.memoryUsed ? ` • Memory: ${(tc.memoryUsed / 1024).toFixed(2)} MB` : ''}
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            } else {
+                content.innerHTML = `<p style="color: var(--text-secondary);">Verdict: ${formatVerdict(result.verdict)}</p>`;
+            }
+        }
+
+        function getVerdictClass(verdict) {
+            const mapping = {
+                'ACCEPTED': 'accepted',
+                'WRONG_ANSWER': 'wrong-answer',
+                'TIME_LIMIT_EXCEEDED': 'tle',
+                'MEMORY_LIMIT_EXCEEDED': 'mle',
+                'RUNTIME_ERROR': 'runtime-error',
+                'COMPILATION_ERROR': 'compilation-error',
+                'PENDING': 'pending',
+                'INTERNAL_ERROR': 'compilation-error'
+            };
+            return mapping[verdict] || 'pending';
+        }
+
+        function formatVerdict(verdict) {
+            return verdict.replace(/_/g, ' ');
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Load problem on page load
+        document.addEventListener('DOMContentLoaded', loadProblem);
+    </script>
+</body>
+</html>
