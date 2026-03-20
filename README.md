@@ -314,6 +314,21 @@ You write code    →    Server receives it    →    Code runs in sandbox
 
 ---
 
+## 👨 Developed By
+
+<a href="https://twitter.com/jamil_xt" target="_blank">
+  <img src="https://avatars.githubusercontent.com/jamilxt" width="90" align="left">
+</a>
+
+**Md Jamilur Rahman**
+
+[![Twitter](https://img.shields.io/badge/-Twitter-1DA1F2?logo=x&logoColor=white&style=for-the-badge)](https://twitter.com/jamil_xt)
+[![Medium](https://img.shields.io/badge/-Medium-00AB6C?logo=medium&logoColor=white&style=for-the-badge)](https://medium.com/@jamilxt)
+[![Linkedin](https://img.shields.io/badge/-LinkedIn-0077B5?logo=linkedin&logoColor=white&style=for-the-badge)](https://www.linkedin.com/in/jamilxt/)
+[![Web](https://img.shields.io/badge/-Web-0073E6?logo=appveyor&logoColor=white&style=for-the-badge)](https://jamilxt.com/)
+
+---
+
 ## 📚 Learning Resources
 
 If you're new to these technologies:
